@@ -1,4 +1,4 @@
-import {normalizeSuitState,renderSuitPixels,suitSelectionAt,suitAsset} from './suit-renderer.js?v=14';
+import {normalizeSuitState,renderSuitPixels,suitSelectionAt,suitAsset} from './suit-renderer.js?v=20';
 function loadImage(url){return new Promise((resolve,reject)=>{const image=new Image();image.decoding='async';image.onload=()=>resolve(image);image.onerror=reject;image.src=url;});}
 async function loadModel(preview,config){
   const names=config.lighting?['model','materials','lighting']:['model','materials'];
@@ -9,15 +9,17 @@ async function loadModel(preview,config){
   return {source:data[0],materials:data[1],lighting:config.lighting?data[2]:undefined,extraMask:config.extraAsset?data.at(-1):undefined,width,height};
 }
 export function createSuitPreview(canvas,onPaint,options={}){
-  const config={asset:suitAsset,normalize:normalizeSuitState,render:renderSuitPixels,pick:suitSelectionAt,workerURL:new URL('./suit-worker.js?v=14',import.meta.url),...options};
+  const config={asset:suitAsset,normalize:normalizeSuitState,render:renderSuitPixels,pick:suitSelectionAt,workerURL:new URL('./suit-worker.js?v=20',import.meta.url),...options};
   const ctx=canvas.getContext('2d',{alpha:false});
-  let promise,model,worker,pending,busy=false,revision=0,latest,output;
+  let promise,model,worker,pending,recycleBuffer,busy=false,revision=0,latest,output;
   function paint(pixels,id){if(id!==revision)return;ctx.putImageData(new ImageData(pixels,canvas.width,canvas.height),0,0);onPaint();}
   function dispatch(){
     if(!pending||busy||!worker)return;
-    const message=pending;pending=null;busy=true;worker.postMessage(message);
+    const message=pending,transfer=[];pending=null;busy=true;
+    if(recycleBuffer){message.recycle=recycleBuffer;transfer.push(recycleBuffer);recycleBuffer=null;}
+    worker.postMessage(message,transfer);
   }
-  function fallback(){worker?.terminate();worker=null;busy=false;pending=null;if(model&&latest)paint(config.render(model.source,model.materials,latest,output,model.lighting,model.extraMask),revision);}
+  function fallback(){worker?.terminate();worker=null;busy=false;pending=null;recycleBuffer=null;if(model&&latest)paint(config.render(model.source,model.materials,latest,output,model.lighting,model.extraMask),revision);}
   return {
     async load(){
       if(!promise)promise=(async()=>{
@@ -31,7 +33,7 @@ export function createSuitPreview(canvas,onPaint,options={}){
               worker.onmessage=({data})=>{clearTimeout(timeout);data.type==='ready'?resolve():reject(new Error('Use compatible preview'));};
               worker.postMessage({type:'init',model});
             });
-            worker.onmessage=({data})=>{if(data.type==='error'){fallback();return;}if(data.type!=='frame')return;busy=false;paint(new Uint8ClampedArray(data.buffer),data.id);dispatch();};
+            worker.onmessage=({data})=>{if(data.type==='error'){fallback();return;}if(data.type!=='frame')return;busy=false;paint(new Uint8ClampedArray(data.buffer),data.id);recycleBuffer=data.buffer;dispatch();};
             worker.onerror=fallback;
           }catch{worker?.terminate();worker=null;}
         }

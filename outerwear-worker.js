@@ -1,4 +1,4 @@
-import {outerwearAsset,renderOuterwearPixels} from './outerwear-renderer.js?v=19';
+import {outerwearAsset,renderOuterwearPixels} from './outerwear-renderer.js?v=20';
 export function startOuterwearWorker(id){
   let model,frame;
   async function decode(name){
@@ -8,10 +8,11 @@ export function startOuterwearWorker(id){
   }
   globalThis.onmessage=async({data:message})=>{
     try{
-      if(message.type==='init'){model=message.model;frame=new Uint8ClampedArray(model.source.length);globalThis.postMessage({type:'ready'});return;}
+      if(message.type==='init'){model=message.model;frame=null;globalThis.postMessage({type:'ready'});return;}
       if(message.type==='render'){
+        frame=message.recycle?new Uint8ClampedArray(message.recycle):new Uint8ClampedArray(model.source.length);
         renderOuterwearPixels(id,model.source,model.materials,message.state,frame,model.lighting);
-        const copy=frame.slice();globalThis.postMessage({type:'frame',id:message.id,buffer:copy.buffer},[copy.buffer]);return;
+        const buffer=frame.buffer;frame=null;globalThis.postMessage({type:'frame',id:message.id,buffer},[buffer]);return;
       }
       if(message.type==='export'){
         const [source,materials,lighting]=await Promise.all(['model','materials','lighting'].map(decode));

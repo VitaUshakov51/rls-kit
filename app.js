@@ -3,10 +3,10 @@ import {drawSurname} from './surname.js?v=8';
 import {createAssetCache} from './asset-cache.js?v=8';
 import {drawBoots,BOOT_PLACEMENTS} from './boots.js?v=8';
 import {createExportFeedback,waitForExportPaint} from './export-feedback.js?v=12';
-import {normalizeSuitState,suitAsset} from './suit-renderer.js?v=14';
-import {createSuitPreview} from './suit-preview.js?v=18';
-import {normalizeTrainingState,trainingAsset,renderTrainingPixels,trainingSelectionAt} from './training-renderer.js?v=19';
-import {OUTERWEAR,createOuterwearConfig} from './outerwear-renderer.js?v=19';
+import {normalizeSuitState,suitAsset} from './suit-renderer.js?v=20';
+import {createSuitPreview} from './suit-preview.js?v=20';
+import {normalizeTrainingState,trainingAsset,renderTrainingPixels,trainingSelectionAt} from './training-renderer.js?v=20';
+import {OUTERWEAR,createOuterwearConfig} from './outerwear-renderer.js?v=20';
 const $ = id => document.getElementById(id);
 const STORAGE = 'rls-kit-builder-v1';
 const SUIT_STORAGE='rls-tracksuit-v1';
@@ -45,7 +45,7 @@ const trainingCanvas=$('trainingCanvas');
 const trainingPreview=createSuitPreview(trainingCanvas,()=>{
   $('canvasWrap').classList.add('training-ready');
   if(product==='training'){$('loading').hidden=true;$('canvasWrap').removeAttribute('aria-busy');$('download').disabled=exporting;}
-},{asset:trainingAsset,normalize:normalizeTrainingState,render:renderTrainingPixels,pick:trainingSelectionAt,workerURL:new URL('./training-worker.js?v=19',import.meta.url),lighting:true,extraAsset:'pants-inserts'});
+},{asset:trainingAsset,normalize:normalizeTrainingState,render:renderTrainingPixels,pick:trainingSelectionAt,workerURL:new URL('./training-worker.js?v=20',import.meta.url),lighting:true,extraAsset:'pants-inserts'});
 const outerwear=Object.fromEntries(Object.entries(OUTERWEAR).map(([id,definition])=>{
   const config=createOuterwearConfig(id),item={...definition,config,canvas:$(id+'Canvas'),poster:$(id+'BasePreview'),state:config.normalize(null),selected:definition.parts[0][0],ready:false};
   try{item.state=config.normalize(JSON.parse(localStorage.getItem(item.storage)));}catch{}
@@ -209,6 +209,8 @@ function select(key) {
 }
 function applyColor(color) {
   if(!/^#[0-9a-f]{6}$/i.test(color)) return;
+  const current=outerwear[product],colors=current?current.state:product==='training'?trainingState:product==='suit'?suitState:state,key=current?current.selected:product==='training'?trainingSelected:product==='suit'?suitSelected:selected;
+  if(colors[key]===color.toLowerCase()){updateControls();return;}
   const outer=outerwear[product];if(outer)outer.state[outer.selected]=color.toLowerCase();else if(product==='training')trainingState[trainingSelected]=color.toLowerCase();else if(product==='suit')suitState[suitSelected]=color.toLowerCase();else state[selected]=color.toLowerCase();save();updateControls();scheduleRender();
 }
 async function switchProduct(next){
@@ -317,9 +319,10 @@ $('canvasWrap').addEventListener('click',event=>{
   if(key){select(key);if(window.innerWidth<=800)$('selectedName').scrollIntoView({behavior:'smooth',block:'center'});}
 });
 $('canvasWrap').addEventListener('pointermove',event=>{
+  if(event.pointerType==='touch')return;
   if(!activeReady())return;const target=activeCanvas(),rect=target.getBoundingClientRect();
   const key=pickPart((event.clientX-rect.left)*target.width/rect.width,(event.clientY-rect.top)*target.height/rect.height);
-  $('canvasWrap').style.cursor=key?'pointer':'default';
+  const cursor=key?'pointer':'default';if($('canvasWrap').style.cursor!==cursor)$('canvasWrap').style.cursor=cursor;
 });
 function loadImage(url) { return new Promise((resolve,reject)=>{const image=new Image();image.decoding='async';image.onload=()=>resolve(image);image.onerror=reject;image.src=url;}); }
 function imageData(image,width=canvas.width,height=canvas.height) {const c=document.createElement('canvas');c.width=width;c.height=height;const cx=c.getContext('2d',{willReadFrequently:true});cx.drawImage(image,0,0,width,height);return cx.getImageData(0,0,width,height);}

@@ -9,8 +9,8 @@ export function normalizeOuterwearState(id,value){
   return result;
 }
 export function outerwearAsset(id,name,{preview=false}={}){
-  const file=name==='model'?(preview?'preview.webp':'model.webp'):(preview?'preview-':'')+name+(name==='poster'?'.webp':'.png');
-  return 'assets/'+id+'/'+file+'?v=19';
+  const file=name==='model'?(preview?'preview.webp':'model.webp'):(preview?'preview-':'')+name+(name==='poster'||preview?'.webp':'.png');
+  return 'assets/'+id+'/'+file+'?v=20';
 }
 const rgb=hex=>[1,3,5].map(i=>parseInt(hex.slice(i,i+2),16));
 export function renderOuterwearPixels(id,source,materials,value,output=new Uint8ClampedArray(source.length),lighting){
@@ -31,5 +31,5 @@ export function outerwearSelectionAt(id,materials,width,height,x,y){
   return maximum>=64?keys[values.indexOf(maximum)]:null;
 }
 export function createOuterwearConfig(id){
-  return {asset:(name,options)=>outerwearAsset(id,name,options),normalize:value=>normalizeOuterwearState(id,value),render:(source,materials,value,output,lighting)=>renderOuterwearPixels(id,source,materials,value,output,lighting),pick:(materials,width,height,x,y)=>outerwearSelectionAt(id,materials,width,height,x,y),workerURL:new URL('./'+id+'-worker.js?v=19',import.meta.url),lighting:true};
+  return {asset:(name,options)=>outerwearAsset(id,name,options),normalize:value=>normalizeOuterwearState(id,value),render:(source,materials,value,output,lighting)=>renderOuterwearPixels(id,source,materials,value,output,lighting),pick:(materials,width,height,x,y)=>outerwearSelectionAt(id,materials,width,height,x,y),workerURL:new URL('./'+id+'-worker.js?v=20',import.meta.url),lighting:true};
 }

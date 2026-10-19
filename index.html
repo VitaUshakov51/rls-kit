@@ -4,14 +4,14 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#f5f6f8">
-  <meta name="description" content="Конструктор RLS: футбольная форма, парадные и тренировочные костюмы в цветах вашей команды.">
-  <title>RLS — Конструктор формы</title>
+  <meta name="description" content="Конструктор экипировки RLS: футбольная форма, костюмы, ветровки и зимние куртки в цветах вашей команды.">
+  <title>RLS — Конструктор экипировки</title>
   <link rel="preload" href="assets/name-font.woff2?v=8" as="font" type="font/woff2" crossorigin>
-  <link rel="stylesheet" href="styles.css?v=19">
+  <link rel="stylesheet" href="styles.css?v=21">
 </head>
 <body>
   <header class="header">
-    <a class="brand" href="./" aria-label="RLS — Конструктор формы"><img src="assets/rls.png" alt="RLS"><span class="brand-divider"></span><span>Конструктор формы</span></a>
+    <a class="brand" href="https://rls-team.ru/" aria-label="RLS — основной сайт"><img src="assets/rls.png" alt="RLS" width="203" height="63"><span class="brand-divider"></span><span>Конструктор экипировки</span></a>
     <button class="button quiet" id="reset" type="button"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 10a8 8 0 1 1 2 8M4 4v6h6"/></svg>Сбросить</button>
   </header>
   <nav class="product-menu" aria-label="Тип комплекта">
@@ -87,7 +87,19 @@
           <p class="name-hint">Над номером, как на макете.</p>
         </div>
       </section>
-      <div class="controls-footer"><button class="button primary" id="download" type="button" disabled><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12m-5-5 5 5 5-5M5 17v4h14v-4"/></svg><span id="downloadLabel">Скачать макет</span></button><p>Изменения сразу видны спереди и сзади</p></div>
+      <div class="controls-footer">
+        <button class="button primary" id="download" type="button" disabled><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12m-5-5 5 5 5-5M5 17v4h14v-4"/></svg><span id="downloadLabel">Скачать макет</span></button>
+        <p>Изменения сразу видны спереди и сзади</p>
+        <section class="manager-contact" aria-labelledby="contactTitle">
+          <h3 id="contactTitle">Узнать стоимость комплекта</h3>
+          <p class="manager-contact-copy">Скачайте макет и отправьте его менеджеру:</p>
+          <div class="social-links" role="group" aria-label="Связаться с менеджером">
+            <a class="social-button social-button--telegram" href="https://t.me/office_manager_rls" target="_blank" rel="noopener noreferrer" aria-label="Написать менеджеру в Telegram (новая вкладка)"><img src="assets/social/telegram.svg" width="24" height="24" alt="" aria-hidden="true"><span>Telegram</span></a>
+            <a class="social-button social-button--max" href="https://max.ru/u/f9LHodD0cOLgikdzHwyS03aW6ya_WibrXnfdpELv21M9zB6Hi4WqgoEM9DY" target="_blank" rel="noopener noreferrer" aria-label="Написать менеджеру в MAX (новая вкладка)"><img src="assets/social/max.svg" width="24" height="24" alt="" aria-hidden="true"><span>MAX</span></a>
+            <a class="social-button social-button--vk" href="https://vk.me/rls_football" target="_blank" rel="noopener noreferrer" aria-label="Написать менеджеру во ВКонтакте (новая вкладка)"><img src="assets/social/vk.svg" width="24" height="24" alt="" aria-hidden="true"><span>ВКонтакте</span></a>
+          </div>
+        </section>
+      </div>
     </aside>
   </main>
   <dialog id="exportDialog" class="export-dialog" aria-labelledby="exportTitle" aria-describedby="exportMessage" data-state="busy">
@@ -102,10 +114,19 @@
     </div>
     <div class="export-actions">
       <a class="button primary" data-export-save download="RLS-komplekt.png" hidden>Скачать PNG</a>
+      <section class="manager-contact export-contact" aria-labelledby="exportContactTitle">
+        <h3 id="exportContactTitle">Отправьте макет менеджеру</h3>
+        <p class="manager-contact-copy">Прикрепите скачанный PNG в сообщении — рассчитаем стоимость вашего комплекта.</p>
+        <div class="social-links" role="group" aria-label="Отправить макет менеджеру для расчёта стоимости">
+          <a class="social-button social-button--telegram" href="https://t.me/office_manager_rls" target="_blank" rel="noopener noreferrer" aria-label="Отправить макет менеджеру в Telegram (новая вкладка)"><img src="assets/social/telegram.svg" width="24" height="24" alt="" aria-hidden="true"><span>Telegram</span></a>
+          <a class="social-button social-button--max" href="https://max.ru/u/f9LHodD0cOLgikdzHwyS03aW6ya_WibrXnfdpELv21M9zB6Hi4WqgoEM9DY" target="_blank" rel="noopener noreferrer" aria-label="Отправить макет менеджеру в MAX (новая вкладка)"><img src="assets/social/max.svg" width="24" height="24" alt="" aria-hidden="true"><span>MAX</span></a>
+          <a class="social-button social-button--vk" href="https://vk.me/rls_football" target="_blank" rel="noopener noreferrer" aria-label="Отправить макет менеджеру во ВКонтакте (новая вкладка)"><img src="assets/social/vk.svg" width="24" height="24" alt="" aria-hidden="true"><span>ВКонтакте</span></a>
+        </div>
+      </section>
       <button class="button quiet" data-export-close type="button" hidden>Вернуться к конструктору</button>
     </div>
   </dialog>
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
-  <script type="module" src="app.js?v=19"></script>
+  <script type="module" src="app.js?v=20"></script>
 </body>
 </html>

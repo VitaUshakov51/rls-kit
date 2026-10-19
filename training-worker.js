@@ -1,4 +1,4 @@
-import {renderTrainingPixels,trainingAsset} from './training-renderer.js?v=19';
+import {renderTrainingPixels,trainingAsset} from './training-renderer.js?v=20';
 let model,frame;
 async function decode(name){
   const response=await fetch(trainingAsset(name));if(!response.ok)throw new Error('Training asset unavailable');
@@ -7,10 +7,11 @@ async function decode(name){
 }
 globalThis.onmessage=async({data:message})=>{
   try{
-    if(message.type==='init'){model=message.model;frame=new Uint8ClampedArray(model.source.length);globalThis.postMessage({type:'ready'});return;}
+    if(message.type==='init'){model=message.model;frame=null;globalThis.postMessage({type:'ready'});return;}
     if(message.type==='render'){
+      frame=message.recycle?new Uint8ClampedArray(message.recycle):new Uint8ClampedArray(model.source.length);
       renderTrainingPixels(model.source,model.materials,message.state,frame,model.lighting,model.extraMask);
-      const copy=frame.slice();globalThis.postMessage({type:'frame',id:message.id,buffer:copy.buffer},[copy.buffer]);return;
+      const buffer=frame.buffer;frame=null;globalThis.postMessage({type:'frame',id:message.id,buffer},[buffer]);return;
     }
     if(message.type==='export'){
       const [source,materials,lighting,inserts]=await Promise.all(['model','materials','lighting','pants-inserts'].map(decode));

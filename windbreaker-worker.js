@@ -1,2 +1,2 @@
-import {startOuterwearWorker} from './outerwear-worker.js?v=19';
+import {startOuterwearWorker} from './outerwear-worker.js?v=20';
 startOuterwearWorker('windbreaker');

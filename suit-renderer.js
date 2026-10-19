@@ -8,8 +8,8 @@ export function normalizeSuitState(value){
   return state;
 }
 export function suitAsset(name,{preview=false}={}){
-  const file=name==='model'?(preview?'preview.webp':'model.webp'):name==='poster'?(preview?'preview-poster.webp':'poster.webp'):(preview?'preview-materials.png':'materials.png');
-  return 'assets/suit/'+file+'?v=14';
+  const file=name==='model'?(preview?'preview.webp':'model.webp'):name==='poster'?(preview?'preview-poster.webp':'poster.webp'):(preview?'preview-materials.webp':'materials.png');
+  return 'assets/suit/'+file+'?v=20';
 }
 const rgb=hex=>[1,3,5].map(i=>parseInt(hex.slice(i,i+2),16));
 const byte=value=>Math.max(0,Math.min(255,Math.round(value)));

@@ -7,8 +7,8 @@ export function normalizeTrainingState(value){
   return result;
 }
 export function trainingAsset(name,{preview=false}={}){
-  const file=name==='model'?(preview?'preview.webp':'model.webp'):(preview?'preview-':'')+name+(name==='poster'?'.webp':'.png');
-  return 'assets/training/'+file+'?v=19';
+  const file=name==='model'?(preview?'preview.webp':'model.webp'):(preview?'preview-':'')+name+(name==='poster'||preview?'.webp':'.png');
+  return 'assets/training/'+file+'?v=20';
 }
 const rgb=hex=>[1,3,5].map(i=>parseInt(hex.slice(i,i+2),16));
 const byte=value=>Math.max(0,Math.min(255,Math.round(value)));

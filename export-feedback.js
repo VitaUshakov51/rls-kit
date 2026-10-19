@@ -17,7 +17,8 @@ export function createExportFeedback(dialog){
   close.addEventListener('click',()=>{if(typeof dialog.close==='function')dialog.close();else dialog.removeAttribute('open');});
   dialog.addEventListener('cancel',event=>{if(busy)event.preventDefault();});
   return {
-    begin(){
+    begin(filename='RLS-komplekt.png'){
+      save.download=filename;
       release();busy=true;dialog.dataset.state='busy';save.hidden=true;close.hidden=true;
       title.textContent='Готовим макет';
       message.textContent='Пожалуйста, дождитесь подготовки. PNG скачается автоматически. На телефоне это может занять чуть больше времени.';

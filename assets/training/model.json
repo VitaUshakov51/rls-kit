@@ -1,0 +1,68 @@
+{
+  "source": [
+    1086,
+    1448
+  ],
+  "preview": [
+    816,
+    1088
+  ],
+  "export": [
+    2160,
+    2880
+  ],
+  "defaults": {
+    "jacket": "#bfc1c4",
+    "inserts": "#191d24",
+    "pants": "#191d24",
+    "pantsInserts": "#bfc1c4"
+  },
+  "midtones": {
+    "jacket": 166.3333282470703,
+    "inserts": 14.0,
+    "pants": 26.33333396911621
+  },
+  "logos": [
+    {
+      "name": "chest",
+      "repair": [
+        194,
+        206,
+        270,
+        239
+      ],
+      "print": [
+        201,
+        213,
+        263,
+        231
+      ],
+      "colorZone": "inserts"
+    },
+    {
+      "name": "pants",
+      "repair": [
+        388,
+        688,
+        458,
+        722
+      ],
+      "print": [
+        395,
+        695,
+        452,
+        713
+      ],
+      "colorZone": "pantsInserts"
+    }
+  ],
+  "pantsInserts": {
+    "width": 18,
+    "endY": 930,
+    "side": "outer",
+    "views": 2,
+    "colorZone": "pantsInserts",
+    "asset": "pants-inserts.png"
+  },
+  "backdrop": "#ffffff"
+}

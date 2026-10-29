@@ -6,8 +6,11 @@
   <meta name="theme-color" content="#f5f6f8">
   <meta name="description" content="Конструктор экипировки RLS: футбольная форма, костюмы, ветровки и зимние куртки в цветах вашей команды.">
   <title>RLS — Конструктор экипировки</title>
+  <link rel="icon" href="favicon.svg?v=24" type="image/svg+xml">
+  <link rel="icon" href="favicon-32.png?v=24" type="image/png" sizes="32x32">
+  <link rel="apple-touch-icon" href="favicon-180.png?v=24" sizes="180x180">
   <link rel="preload" href="assets/name-font.woff2?v=8" as="font" type="font/woff2" crossorigin>
-  <link rel="stylesheet" href="styles.css?v=21">
+  <link rel="stylesheet" href="styles.css?v=24">
 </head>
 <body>
   <header class="header">
@@ -51,6 +54,14 @@
         <button id="tab-shorts" class="tab" role="tab" aria-selected="false" aria-controls="parts" data-group="shorts" type="button" tabindex="-1">Шорты</button>
         <button id="tab-socks" class="tab" role="tab" aria-selected="false" aria-controls="parts" data-group="socks" type="button" tabindex="-1">Гетры</button>
       </div>
+      <section class="training-design-section" id="trainingDesignSection" aria-labelledby="trainingDesignTitle" hidden>
+        <h3 id="trainingDesignTitle">Оформление костюма</h3>
+        <div class="design-options" role="group" aria-label="Оформление тренировочного костюма">
+          <button class="design-mode" data-training-design="print" type="button" aria-pressed="false">Принт</button>
+          <button class="design-mode active" data-training-design="inserts" type="button" aria-pressed="true">Вставки</button>
+        </div>
+        <p class="name-hint" id="trainingDesignHint">Без принта на ткани. Цвета вставок на кофте и брюках можно менять.</p>
+      </section>
       <div class="parts" id="parts" role="tabpanel" aria-labelledby="tab-shirt"></div>
       <section class="color-section" aria-labelledby="selectedName">
         <div class="section-title"><h3 id="selectedName">Цвет футболки</h3><span class="color-value" id="colorValue">#FFFFFF</span></div>
@@ -127,6 +138,6 @@
     </div>
   </dialog>
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
-  <script type="module" src="app.js?v=23"></script>
+  <script type="module" src="app.js?v=24"></script>
 </body>
 </html>

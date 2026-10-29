@@ -36,20 +36,25 @@ export const PATTERNS = Object.freeze([
   {"id":"fade-lines","name":"Полосы с затуханием","vector":true,"shirtOnly":true,"colors":["#082c73"],"base":"#ffffff"}
 ]);
 const SHIRT_ONLY_PATTERNS=new Set(['dragon','lion','geometry','speed','barcode','gold-veins','diagonal-halftone','skyline']);
+// Repeating fabric textures may continue onto sleeves. Compositions designed
+// for a front/back panel follow the actual torso seams instead.
+const SLEEVE_PATTERNS=new Set(['original','brush','fingerprint','camo','graffiti','slashes','checker','teal-bars','brush-strokes']);
+export const canPrintSleeves=id=>SLEEVE_PATTERNS.has(id);
+function printCoverage(areas,p,id){return areas?areas[p+(canPrintSleeves(id)?0:1)]/255:1;}
 export function canPrintShorts(id){
   return id!=='none'&&PATTERNS.some(p=>p.id===id)&&!SHIRT_ONLY_PATTERNS.has(id)&&!PATTERNS.find(p=>p.id===id)?.shirtOnly;
 }
 export function patternAsset(id,{preview=false,bitmap=false,extra=false}={}){
   // Preview bitmaps are rendered directly from the original curves at the
   // canvas resolution. Phones never need to parse the 419,075-point source.
-  return 'assets/'+(preview?'preview/':'')+'patterns/'+id+(extra?'-extra':'')+'.'+(PATTERNS.find(p=>p.id===id)?.vector&&!preview&&!bitmap?'svg':'png')+'?v=8';
+  return 'assets/'+(preview?'preview/':'')+'patterns/'+id+(extra?'-extra':'')+'.'+(PATTERNS.find(p=>p.id===id)?.vector&&!preview&&!bitmap?'svg':'png')+'?v=24';
 }
 export function shortsPatternAsset(id,{preview=false,extra=false}={}){
   return 'assets/'+(preview?'preview/':'')+'short-patterns/'+id+(extra?'-extra':'')+'.png?v=8';
 }
 export function modelAsset(name,{preview=false}={}){
-  const clean=['zones','coverage','ink','outlines'].includes(name);
-  return 'assets/'+(preview?'preview/':'')+(clean?'clean/':'')+name+(name==='kit'&&preview?'.webp':'.png')+'?v='+(clean?(['zones','coverage'].includes(name)?'11':'10'):'8');
+  const clean=['zones','coverage','ink','outlines','print-area'].includes(name);
+  return 'assets/'+(preview?'preview/':'')+(clean?'clean/':'')+name+(name==='kit'&&preview?'.webp':'.png')+'?v='+(name==='print-area'?'24':clean?(['zones','coverage'].includes(name)?'11':'10'):'8');
 }
 export function applyReferenceColors(value){
   const state=normalizeState(value),preset=PATTERNS.find(p=>p.id===state.pattern);
@@ -111,6 +116,7 @@ function inkSelection(pattern,p){
 export function selectionAt(atlas, width, height, x, y, state=null, layers={}) {
   if (x<0 || y<0 || x>=width || y>=height) return null;
   const p=(Math.floor(y)*width+Math.floor(x))*4;
+  if(!atlas[p+3])return null;
   const outlined=layers.outlines?.[p];
   if(outlined&&(outlined!==9||state?.backLogoEnabled)&&layers.outlines[p+1]>110&&state?.outlines?.[REGION_KEYS[outlined]]?.enabled)return REGION_KEYS[outlined];
   const key=REGION_KEYS[atlas[p]===9&&state&&!state.backLogoEnabled?1:atlas[p]];
@@ -118,6 +124,7 @@ export function selectionAt(atlas, width, height, x, y, state=null, layers={}) {
     return inkSelection(layers.pattern.shorts,p-layers.pattern.shorts.offsetY*width*4)||'shorts';
   }
   if(key==='shirt'&&state){
+    if(printCoverage(layers.printArea,p,state.pattern)<.5)return 'shirt';
     if(state.pattern==='none')return 'shirt';
     if(state.pattern!=='original'){
       const pattern=layers.pattern?.data||layers.pattern;
@@ -135,7 +142,7 @@ export function selectionAt(atlas, width, height, x, y, state=null, layers={}) {
 export function createPicker(atlas,width,height,layers={}){
   const pixels=width*height,regions=new Uint8Array(pixels),flags=new Uint8Array(pixels),strokes=new Uint16Array(pixels);
   for(let i=0,p=0;i<pixels;i++,p+=4){
-    regions[i]=atlas[p];const repair=(layers.rearFabric?.[p+2]||0)/255;
+    regions[i]=atlas[p+3]?atlas[p]:0;const repair=(layers.rearFabric?.[p+2]||0)/255;
     const hidden=atlas[p+1]*(1-repair)+(layers.rearFabric?.[p]||0)*repair;
     flags[i]=(atlas[p+1]>110?1:0)|(hidden>110?2:0);
     if(layers.outlines?.[p+1]>110)strokes[i]=layers.outlines[p];
@@ -147,6 +154,7 @@ export function createPicker(atlas,width,height,layers={}){
     const key=REGION_KEYS[regions[i]===9&&!state.backLogoEnabled?1:regions[i]];
     if(key==='shorts'&&state.shortsPrintEnabled&&canPrintShorts(state.pattern)&&pattern?.shorts)return inkSelection(pattern.shorts,i*4-pattern.shorts.offsetY*width*4)||'shorts';
     if(key!=='shirt')return key||null;
+    if(printCoverage(layers.printArea,i*4,state.pattern)<.5)return 'shirt';
     if(state.pattern==='none')return 'shirt';
     if(state.pattern==='original')return flags[i]&(state.backLogoEnabled?1:2)?'print':'shirt';
     const p=i*4,data=pattern?.data||pattern;if(data?.[p]>110)return 'print';if(data?.[p+1]>110)return 'printSecondary';if(data?.[p+2]>110)return 'printTertiary';if(pattern?.extra?.[p]>110)return 'printFourth';if(pattern?.extra?.[p+1]>110)return 'printFifth';return 'shirt';
@@ -162,6 +170,7 @@ export function renderPixels(source, atlas, width, height, state, inkMask, outpu
   const indices=layers.indices,count=indices?indices.length:source.length/4;
   const exclusive=state.pattern!=='original'&&state.pattern!=='none';
   const hasTertiary=PATTERNS.find(item=>item.id===state.pattern)?.tertiary;
+  const areaChannel=canPrintSleeves(state.pattern)?0:1;
   for (let i=0; i<count; i++) {
     const p=indices?indices[i]:i*4;
     const region=atlas[p], coverage=atlas[p+3]/255;
@@ -176,11 +185,12 @@ export function renderPixels(source, atlas, width, height, state, inkMask, outpu
     const shade=Math.min(1,Math.max(.25,(atlas[p+2]*(1-repair)+(rearFabric?.[p+1]||0)*repair)/245));
     const pants=shortsMaterial&&(region===5||region===6||region===7),q=pants?p-shortsOffset:p;
     const plate=pants?shortsMaterial.data:shirt?patternPlate:null,extra=pants?shortsMaterial.extra:shirt?patternExtra:null;
-    const pattern=shirt&&state.pattern==='original'?(atlas[p+1]*(1-repair)+(rearFabric?.[p]||0)*repair)/255:(pants||shirt&&exclusive)&&plate?(plate[q]||0)/255:0;
-    const secondary=(exclusive||pants)&&plate?(plate[q+1]||0)/255:0;
-    const tertiary=(exclusive||pants)&&plate&&hasTertiary?(plate[q+2]||0)/255:0;
-    const fourth=(exclusive||pants)&&extra?(extra[q]||0)/255:0;
-    const fifth=(exclusive||pants)&&extra?(extra[q+1]||0)/255:0;
+    const area=shirt&&layers.printArea?layers.printArea[p+areaChannel]/255:1;
+    const pattern=(shirt&&state.pattern==='original'?(atlas[p+1]*(1-repair)+(rearFabric?.[p]||0)*repair)/255:(pants||shirt&&exclusive)&&plate?(plate[q]||0)/255:0)*area;
+    const secondary=(exclusive||pants)&&plate?(plate[q+1]||0)/255*area:0;
+    const tertiary=(exclusive||pants)&&plate&&hasTertiary?(plate[q+2]||0)/255*area:0;
+    const fourth=(exclusive||pants)&&extra?(extra[q]||0)/255*area:0;
+    const fifth=(exclusive||pants)&&extra?(extra[q+1]||0)/255*area:0;
     const opacity=marked ? (inkMask?.[p]||0)/255 : 0;
     // One neutral light multiplier retains saturation. Ink is composited over
     // the current fabric color, never over white pixels from the source photo.

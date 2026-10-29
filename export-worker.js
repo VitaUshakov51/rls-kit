@@ -1,4 +1,4 @@
-import {renderPixels,normalizeState,patternAsset,shortsPatternAsset,PATTERNS,modelAsset} from './renderer.js?v=23';
+import {renderPixels,normalizeState,patternAsset,shortsPatternAsset,PATTERNS,modelAsset} from './renderer.js?v=24';
 import {drawSurname} from './surname.js?v=8';
 import {drawBoots,BOOT_PLACEMENTS} from './boots.js?v=8';
 async function image(url){
@@ -21,7 +21,7 @@ globalThis.onmessage=async event=>{
       catch{bitmapOnly=true;}
     }
     // Decode one full-sized map at a time to limit temporary canvas memory.
-    for(const name of ['kit','zones','coverage','ink','outlines','rear-fabric'])model[name]=await pixels(modelAsset(name));
+    for(const name of ['kit','zones','coverage','ink','outlines','rear-fabric','print-area'])model[name]=await pixels(modelAsset(name));
     for(let p=0;p<model.zones.length;p+=4)model.zones[p+3]=model.coverage[p];model.coverage=null;
     let pattern=null;
     if(!['none','original'].includes(state.pattern)){
@@ -37,7 +37,7 @@ globalThis.onmessage=async event=>{
       if(typeof FontFace!=='function'||!globalThis.fonts)throw new Error('Use compatible font export');
       const font=await new FontFace('KitName',"url('assets/name-font.woff2?v=8')",{weight:'400'}).load();globalThis.fonts.add(font);
     }
-    const output=renderPixels(model.kit,model.zones,2160,2880,state,model.ink,undefined,{pattern,outlines:model.outlines,rearFabric:model['rear-fabric']});
+    const output=renderPixels(model.kit,model.zones,2160,2880,state,model.ink,undefined,{pattern,outlines:model.outlines,rearFabric:model['rear-fabric'],printArea:model['print-area']});
     for(const key of Object.keys(model))model[key]=null;
     const canvas=new OffscreenCanvas(2160,2880),ctx=canvas.getContext('2d',{alpha:false});ctx.putImageData(new ImageData(output,2160,2880),0,0);
     drawSurname(ctx,state,2160);

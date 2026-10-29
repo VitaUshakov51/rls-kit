@@ -1,10 +1,10 @@
-import {createRenderer} from './renderer.js?v=23';
+import {createRenderer} from './renderer.js?v=24';
 let renderer,pattern=null,patternId=null;
 globalThis.onmessage=event=>{
   const message=event.data;
   try{
     if(message.type==='init'){
-      const m=message.model;renderer=createRenderer(m.source,m.atlas,m.width,m.height,m.ink,{outlines:m.outlines,rearFabric:m.rearFabric});
+      const m=message.model;renderer=createRenderer(m.source,m.atlas,m.width,m.height,m.ink,{outlines:m.outlines,rearFabric:m.rearFabric,printArea:m.printArea});
       globalThis.postMessage({type:'ready'});return;
     }
     if(message.type==='render'){

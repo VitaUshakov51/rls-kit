@@ -11,15 +11,28 @@ async function loadModel(preview,config){
 export function createSuitPreview(canvas,onPaint,options={}){
   const config={asset:suitAsset,normalize:normalizeSuitState,render:renderSuitPixels,pick:suitSelectionAt,workerURL:new URL('./suit-worker.js?v=20',import.meta.url),...options};
   const ctx=canvas.getContext('2d',{alpha:false});
-  let promise,model,worker,pending,recycleBuffer,busy=false,revision=0,latest,output;
+  let promise,model,worker,pending,recycleBuffer,busy=false,revision=0,latest,output,latestPattern=null,workerPattern=null;
   function paint(pixels,id){if(id!==revision)return;ctx.putImageData(new ImageData(pixels,canvas.width,canvas.height),0,0);onPaint();}
   function dispatch(){
     if(!pending||busy||!worker)return;
     const message=pending,transfer=[];pending=null;busy=true;
+    if(config.loadPattern){if(message.pattern===workerPattern)delete message.pattern;else workerPattern=message.pattern;}
     if(recycleBuffer){message.recycle=recycleBuffer;transfer.push(recycleBuffer);recycleBuffer=null;}
     worker.postMessage(message,transfer);
   }
-  function fallback(){worker?.terminate();worker=null;busy=false;pending=null;recycleBuffer=null;if(model&&latest)paint(config.render(model.source,model.materials,latest,output,model.lighting,model.extraMask),revision);}
+  function fallback(){worker?.terminate();worker=null;busy=false;pending=null;recycleBuffer=null;workerPattern=null;if(model&&latest)render(latest);}
+  function render(value){
+    latest=config.normalize(value);const id=++revision,snapshot=latest;
+    if(!model)return;
+    const draw=pattern=>{
+      if(id!==revision)return;
+      latestPattern=pattern;
+      if(worker){pending={type:'render',id,state:snapshot,pattern};dispatch();}
+      else paint(config.render(model.source,model.materials,snapshot,output,model.lighting,model.extraMask,latestPattern),id);
+    };
+    if(config.loadPattern){pending=null;config.loadPattern(snapshot,true).then(draw).catch(()=>{if(id===revision)config.onError?.();});}
+    else draw(null);
+  }
   return {
     async load(){
       if(!promise)promise=(async()=>{
@@ -41,12 +54,7 @@ export function createSuitPreview(canvas,onPaint,options={}){
       })().catch(error=>{promise=null;throw error;});
       return promise;
     },
-    render(value){
-      latest=config.normalize(value);revision++;
-      if(!model)return;
-      if(worker){pending={type:'render',id:revision,state:latest};dispatch();}
-      else paint(config.render(model.source,model.materials,latest,output,model.lighting,model.extraMask),revision);
-    },
+    render,
     pick(x,y){return model?config.pick(model.materials,model.width,model.height,x,y,model.extraMask):null;},
     async export(value){
       const snapshot=config.normalize(value);
@@ -62,8 +70,8 @@ export function createSuitPreview(canvas,onPaint,options={}){
           });
         }catch{}finally{exporter?.terminate();}
       }
-      const full=await loadModel(false,config),native=document.createElement('canvas');native.width=full.width;native.height=full.height;
-      native.getContext('2d',{alpha:false}).putImageData(new ImageData(config.render(full.source,full.materials,snapshot,undefined,full.lighting,full.extraMask),full.width,full.height),0,0);
+      const full=await loadModel(false,config),native=document.createElement('canvas'),pattern=config.loadPattern?await config.loadPattern(snapshot,false):null;native.width=full.width;native.height=full.height;
+      native.getContext('2d',{alpha:false}).putImageData(new ImageData(config.render(full.source,full.materials,snapshot,undefined,full.lighting,full.extraMask,pattern),full.width,full.height),0,0);
       const canvas=document.createElement('canvas');canvas.width=2160;canvas.height=2880;const ctx=canvas.getContext('2d',{alpha:false});ctx.imageSmoothingQuality='high';ctx.drawImage(native,0,0,2160,2880);
       const blob=await new Promise(resolve=>canvas.toBlob(resolve,'image/png'));native.width=native.height=canvas.width=canvas.height=1;return blob;
     }

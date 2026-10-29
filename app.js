@@ -5,7 +5,8 @@ import {drawBoots,BOOT_PLACEMENTS} from './boots.js?v=8';
 import {createExportFeedback,waitForExportPaint} from './export-feedback.js?v=12';
 import {normalizeSuitState,suitAsset} from './suit-renderer.js?v=20';
 import {createSuitPreview} from './suit-preview.js?v=20';
-import {normalizeTrainingState,trainingAsset,renderTrainingPixels,trainingSelectionAt} from './training-renderer.js?v=20';
+import {normalizeTrainingState,trainingAsset} from './training-renderer.js?v=22t1';
+import {createTrainingPreview} from './training-preview.js?v=22t1';
 import {OUTERWEAR,createOuterwearConfig} from './outerwear-renderer.js?v=20';
 import {recordMockupDownload} from './download-stats.js?v=22';
 const $ = id => document.getElementById(id);
@@ -13,7 +14,17 @@ const STORAGE = 'rls-kit-builder-v1';
 const SUIT_STORAGE='rls-tracksuit-v1';
 const SUIT_PARTS=[['main','Основной цвет','Основной цвет костюма'],['secondary','Второстепенный цвет','Второстепенный цвет костюма']];
 const TRAINING_STORAGE='rls-training-v1';
-const TRAINING_PARTS=[['jacket','Кофта','Цвет кофты'],['inserts','Вставки сверху','Цвет вставок сверху'],['pants','Брюки','Цвет брюк'],['pantsInserts','Вставки снизу','Цвет вставок снизу']];
+let trainingGroup='top';
+function trainingParts(section=trainingGroup){
+  if(section==='bottom')return [['pants','Брюки','Цвет брюк'],['pantsInserts',trainingState.pantsMode==='inserts'?'Вставки снизу':'Логотип на брюках',trainingState.pantsMode==='inserts'?'Цвет вставок снизу':'Цвет логотипа на брюках']];
+  const entries=[['jacket','Ткань кофты','Цвет кофты'],['inserts',trainingState.topMode==='inserts'?'Вставки сверху':'Логотип на кофте',trainingState.topMode==='inserts'?'Цвет вставок сверху':'Цвет логотипа на кофте']];
+  if(trainingState.topMode==='print'){
+    const count=PATTERNS.find(p=>p.id===trainingState.pattern)?.colors?.length||1;
+    const labels=['Принт','Детали принта','Третий цвет принта','Четвёртый цвет принта','Пятый цвет принта'];
+    PRINT_KEYS.slice(0,count).forEach((key,i)=>entries.push([key,labels[i],i?'Цвет: '+labels[i].toLowerCase():'Цвет принта']));
+  }
+  return entries;
+}
 let trainingState=normalizeTrainingState(null),trainingSelected='jacket',trainingReady=false;
 try{trainingState=normalizeTrainingState(JSON.parse(localStorage.getItem(TRAINING_STORAGE)));}catch{}
 let product='kit',suitState=normalizeSuitState(null),suitSelected='main',suitReady=false,productRequest=0;
@@ -43,10 +54,10 @@ const suitPreview=createSuitPreview(suitCanvas,()=>{
   if(product==='suit'){$('loading').hidden=true;$('canvasWrap').removeAttribute('aria-busy');$('download').disabled=exporting;}
 });
 const trainingCanvas=$('trainingCanvas');
-const trainingPreview=createSuitPreview(trainingCanvas,()=>{
+const trainingPreview=createTrainingPreview(trainingCanvas,()=>{
   $('canvasWrap').classList.add('training-ready');
   if(product==='training'){$('loading').hidden=true;$('canvasWrap').removeAttribute('aria-busy');$('download').disabled=exporting;}
-},{asset:trainingAsset,normalize:normalizeTrainingState,render:renderTrainingPixels,pick:trainingSelectionAt,workerURL:new URL('./training-worker.js?v=20',import.meta.url),lighting:true,extraAsset:'pants-inserts'});
+},message=>toast(message));
 const outerwear=Object.fromEntries(Object.entries(OUTERWEAR).map(([id,definition])=>{
   const config=createOuterwearConfig(id),item={...definition,config,canvas:$(id+'Canvas'),poster:$(id+'BasePreview'),state:config.normalize(null),selected:definition.parts[0][0],ready:false};
   try{item.state=config.normalize(JSON.parse(localStorage.getItem(item.storage)));}catch{}
@@ -136,23 +147,36 @@ function scheduleRender() {
 function updateControls() {
   const outer=outerwear[product],isTraining=product==='training',isSuit=product!=='kit',colors=outer?outer.state:isTraining?trainingState:isSuit?suitState:state;
   $('kitTabs').hidden=isSuit;
+  $('trainingTabs').hidden=!isTraining;
+  $('trainingVariantSection').hidden=!isTraining;
+  $('trainingVariantTitle').textContent=trainingGroup==='top'?'Вариант кофты':'Вариант брюк';
+  for(const tab of document.querySelectorAll('.training-tab')){
+    const active=tab.dataset.trainingGroup===trainingGroup;tab.classList.toggle('active',active);tab.setAttribute('aria-selected',String(active));tab.tabIndex=active?0:-1;
+  }
+  for(const button of document.querySelectorAll('.training-option')){
+    const top=button.dataset.trainingPart==='top';button.hidden=top!==(trainingGroup==='top');
+    const active=button.dataset.mode===(top?trainingState.topMode:trainingState.pantsMode);button.classList.toggle('active',active);button.setAttribute('aria-pressed',String(active));
+  }
+  $('trainingVariantHint').textContent=trainingGroup==='top'?'Принт наносится только на кофту, включая рукава и воротник.':'Брюки настраиваются отдельно от кофты.';
   $('previewTitle').textContent=outer?outer.title:isTraining?'Тренировочный костюм':isSuit?'Костюм в ваших цветах':'Форма в ваших цветах';
-  $('controlsHint').textContent=outer?(product==='winter'?'Выберите основной, второй цвет или логотип.':'Выберите основной цвет или вставки.'):isTraining?'Выберите кофту, вставки или брюки.':isSuit?'Выберите основной или второстепенный цвет.':'Выберите деталь, затем цвет.';
+  $('controlsHint').textContent=outer?(product==='winter'?'Выберите основной, второй цвет или логотип.':'Выберите основной цвет или вставки.'):isTraining?'Выберите верх или низ, затем вариант и цвета.':isSuit?'Выберите основной или второстепенный цвет.':'Выберите деталь, затем цвет.';
   $('stageTip').textContent=isSuit?'Нажмите на ткань или вставку, чтобы изменить цвет':'Нажмите на деталь формы, чтобы изменить цвет';
   for(const button of document.querySelectorAll('.product-button')){const active=button.dataset.product===product;button.classList.toggle('active',active);button.setAttribute('aria-pressed',String(active));}
-  for (const tab of document.querySelectorAll('.tab')) {
+  for (const tab of document.querySelectorAll('#kitTabs .tab')) {
     const active=tab.dataset.group===group;
     tab.classList.toggle('active',active); tab.setAttribute('aria-selected',String(active)); tab.tabIndex=active?0:-1;
   }
-  if(isSuit){$('parts').removeAttribute('aria-labelledby');$('parts').setAttribute('aria-label',outer?'Цвета: '+outer.title:isTraining?'Цвета тренировочного костюма':'Цвета парадного костюма');$('parts').setAttribute('role','group');}
+  if(isTraining){$('parts').removeAttribute('aria-label');$('parts').setAttribute('aria-labelledby','training-tab-'+trainingGroup);$('parts').setAttribute('role','tabpanel');}
+  else if(isSuit){$('parts').removeAttribute('aria-labelledby');$('parts').setAttribute('aria-label',outer?'Цвета: '+outer.title:isTraining?'Цвета тренировочного костюма':'Цвета парадного костюма');$('parts').setAttribute('role','group');}
   else{$('parts').removeAttribute('aria-label');$('parts').setAttribute('aria-labelledby','tab-'+group);$('parts').setAttribute('role','tabpanel');}
-  const entries=outer?[...outer.parts]:isTraining?[...TRAINING_PARTS]:isSuit?[...SUIT_PARTS]:GROUPS[group].filter(([key])=>key!=='backLogo'||state.backLogoEnabled);
+  const entries=outer?[...outer.parts]:isTraining?trainingParts():isSuit?[...SUIT_PARTS]:GROUPS[group].filter(([key])=>key!=='backLogo'||state.backLogoEnabled);
   if(!isSuit&&group==='shirt'&&PATTERNS.find(p=>p.id===state.pattern)?.secondary)entries.splice(4,0,['printSecondary','Детали принта','Цвет деталей принта']);
   if(!isSuit&&group==='shirt'&&PATTERNS.find(p=>p.id===state.pattern)?.tertiary)entries.splice(5,0,['printTertiary','Третий цвет принта','Третий цвет принта']);
   if(!isSuit&&group==='shirt'&&(PATTERNS.find(p=>p.id===state.pattern)?.colors?.length||0)>=4)entries.splice(6,0,['printFourth','Четвёртый цвет принта','Четвёртый цвет принта']);
   if(!isSuit&&group==='shirt'&&(PATTERNS.find(p=>p.id===state.pattern)?.colors?.length||0)>=5)entries.splice(7,0,['printFifth','Пятый цвет принта','Пятый цвет принта']);
   if(!isSuit&&group==='shirt'&&state.surnameEnabled)entries.push(['surnameColor','Фамилия','Цвет фамилии']);
   if(!isSuit&&!entries.some(p=>p[0]===selected))selected=entries[0][0];
+  if(isTraining&&!entries.some(p=>p[0]===trainingSelected))trainingSelected=entries[0][0];
   const selection=outer?outer.selected:isTraining?trainingSelected:isSuit?suitSelected:selected;
   for (const [key,label] of entries) {
     let row=partButtons.get(key);
@@ -178,7 +202,8 @@ function updateControls() {
   for(const button of document.querySelectorAll('.swatch')) {
     const active=button.dataset.color===colors[selection];button.classList.toggle('active',active);button.setAttribute('aria-pressed',String(active));
   }
-  $('patternSection').hidden=isSuit||group!=='shirt';
+  $('patternSection').hidden=isTraining?(trainingGroup!=='top'||trainingState.topMode!=='print'):isSuit||group!=='shirt';
+  $('trainingPatternHint').hidden=!isTraining;
   $('shortsPrintSection').hidden=isSuit||group!=='shorts'||(state.pattern!=='none'&&!canPrintShorts(state.pattern));
   $('shortsPrintToggle').checked=state.shortsPrintEnabled;
   $('shortsPrintToggle').disabled=isSuit||!canPrintShorts(state.pattern);
@@ -188,7 +213,9 @@ function updateControls() {
   $('backLogoToggle').checked=state.backLogoEnabled;
   $('backLogoColorButton').hidden=!state.backLogoEnabled;
   $('backLogoDot').style.backgroundColor=state.backLogo;
-  $('referenceColors').hidden=!PATTERNS.find(p=>p.id===state.pattern)?.colors;
+  const activePattern=isTraining?trainingState.pattern:state.pattern;
+  $('referenceColors').hidden=!PATTERNS.find(p=>p.id===activePattern)?.colors;
+  $('referenceColors').textContent=isTraining?'Цвета кофты как на макете':'Цвета комплекта как на макете';
   $('surnameToggle').checked=state.surnameEnabled;
   $('surnameFields').hidden=!state.surnameEnabled;
   $('surnameInput').value=state.surnameText;
@@ -199,12 +226,14 @@ function updateControls() {
   $('outlineColorRow').hidden=!outline?.enabled;
   $('outlineColor').value=outline?.color||'#ffffff';
   for(const button of document.querySelectorAll('.pattern-card')) {
-    const active=button.dataset.pattern===state.pattern;button.classList.toggle('active',active);button.setAttribute('aria-pressed',String(active));
+    button.hidden=isTraining&&button.dataset.pattern==='none';
+    if(button.dataset.pattern==='original')button.querySelector('span:last-of-type').textContent=isTraining?'Осколки':'Текущий';
+    const active=button.dataset.pattern===activePattern;button.classList.toggle('active',active);button.setAttribute('aria-pressed',String(active));
   }
 }
 function select(key) {
   const outer=outerwear[product];if(outer){if(outer.parts.some(p=>p[0]===key)){outer.selected=key;updateControls();}return;}
-  if(product==='training'){if(TRAINING_PARTS.some(p=>p[0]===key)){trainingSelected=key;updateControls();}return;}
+  if(product==='training'){const section=['pants','pantsInserts'].includes(key)?'bottom':'top';if(trainingParts(section).some(p=>p[0]===key)){trainingGroup=section;trainingSelected=key;updateControls();}return;}
   if(product==='suit'){if(SUIT_PARTS.some(p=>p[0]===key)){suitSelected=key;updateControls();}return;}
   selected=key; group=[...PRINT_KEYS,'surnameColor'].includes(key)?'shirt':Object.keys(GROUPS).find(g=>GROUPS[g].some(p=>p[0]===key));updateControls();
 }
@@ -216,7 +245,7 @@ function applyColor(color) {
 }
 async function switchProduct(next){
   if(!['kit','suit','training',...Object.keys(outerwear)].includes(next)||product===next)return;
-  const request=++productRequest;product=next;
+  const request=++productRequest;patternRequest++;product=next;
   $('canvasWrap').classList.toggle('suit-mode',next==='suit');
   $('canvasWrap').classList.toggle('training-mode',next==='training');
   for(const [id,item]of Object.entries(outerwear)){$('canvasWrap').classList.toggle(id+'-mode',next===id);item.canvas.hidden=next!==id;item.poster.hidden=next!==id;}
@@ -250,7 +279,7 @@ for(const [color,name] of PALETTE) {
 }
 // Checkmarks only show for the selected color.
 const style=document.createElement('style');style.textContent='.swatch:not(.active) svg{visibility:hidden}';document.head.append(style);
-for(const tab of document.querySelectorAll('.tab')) {
+for(const tab of document.querySelectorAll('#kitTabs .tab')) {
   tab.addEventListener('click',()=>select(GROUPS[tab.dataset.group][0][0]));
   tab.addEventListener('keydown',event=>{
     if(!['ArrowLeft','ArrowRight','Home','End'].includes(event.key)) return;
@@ -259,6 +288,26 @@ for(const tab of document.querySelectorAll('.tab')) {
     select(GROUPS[keys[next]][0][0]);$('tab-'+keys[next]).focus();
   });
 }
+for(const tab of document.querySelectorAll('.training-tab')){
+  tab.addEventListener('click',()=>select(tab.dataset.trainingGroup==='top'?'jacket':'pants'));
+  tab.addEventListener('keydown',event=>{
+    if(!['ArrowLeft','ArrowRight','Home','End'].includes(event.key))return;
+    event.preventDefault();const next=event.key==='Home'?'top':event.key==='End'?'bottom':trainingGroup==='top'?'bottom':'top';
+    select(next==='top'?'jacket':'pants');$('training-tab-'+next).focus();
+  });
+}
+for(const button of document.querySelectorAll('.training-option'))button.addEventListener('click',async()=>{
+  if(product!=='training')return;
+  const key=button.dataset.trainingPart==='top'?'topMode':'pantsMode',mode=button.dataset.mode,request=++patternRequest;
+  if(trainingState[key]===mode)return;
+  button.disabled=true;button.setAttribute('aria-busy','true');
+  try{
+    if(mode==='print')await trainingPreview.preparePattern(trainingState.pattern);
+    if(request!==patternRequest||product!=='training')return;
+    trainingState[key]=mode;save();updateControls();scheduleRender();
+  }catch{if(request===patternRequest)toast('Принт не загрузился. Попробуйте ещё раз.');}
+  finally{button.disabled=false;button.removeAttribute('aria-busy');}
+});
 $('colorPicker').addEventListener('input',event=>applyColor(event.target.value));
 $('hexInput').addEventListener('input',event=>{
   const raw=event.target.value.trim();const value=raw.startsWith('#')?raw:'#'+raw;
@@ -283,13 +332,29 @@ async function loadPattern(id,shorts=state.shortsPrintEnabled){
   return patternCache.request(materialKey(id,shorts));
 }
 for(const button of document.querySelectorAll('.pattern-card')) button.addEventListener('click',async()=>{
-  const request=++patternRequest;
+  const request=++patternRequest,target=product,id=button.dataset.pattern,isTraining=target==='training';
+  if(target!=='kit'&&!isTraining)return;
   button.disabled=true;button.classList.add('loading');button.setAttribute('aria-busy','true');
-  try{await loadPattern(button.dataset.pattern);if(request===patternRequest){state.pattern=button.dataset.pattern;if(!canPrintShorts(state.pattern))state.shortsPrintEnabled=false;const preset=PATTERNS.find(p=>p.id===state.pattern);preset.colors?.forEach((color,i)=>state[PRINT_KEYS[i]]=color);if(PRINT_KEYS.indexOf(selected)>=(preset.colors?.length||1))selected='print';save();updateControls();scheduleRender();}}
+  try{
+    if(isTraining)await trainingPreview.preparePattern(id);else await loadPattern(id);
+    if(request===patternRequest&&product===target){
+      const colors=isTraining?trainingState:state,preset=PATTERNS.find(p=>p.id===id);colors.pattern=id;
+      if(isTraining)colors.topMode='print';else if(!canPrintShorts(id))state.shortsPrintEnabled=false;
+      preset.colors?.forEach((color,i)=>colors[PRINT_KEYS[i]]=color);
+      if(isTraining){if(PRINT_KEYS.indexOf(trainingSelected)>=(preset.colors?.length||1))trainingSelected='print';}
+      else if(PRINT_KEYS.indexOf(selected)>=(preset.colors?.length||1))selected='print';
+      save();updateControls();scheduleRender();
+    }
+  }
   catch{if(request===patternRequest)toast('Принт не загрузился. Попробуйте ещё раз.');}
   finally{button.disabled=false;button.classList.remove('loading');button.removeAttribute('aria-busy');}
 });
-$('referenceColors').addEventListener('click',()=>{state=applyReferenceColors(state);save();updateControls();scheduleRender();});
+$('referenceColors').addEventListener('click',()=>{
+  if(product==='training'){
+    const preset=PATTERNS.find(p=>p.id===trainingState.pattern);if(preset?.colors){trainingState.jacket=preset.base;preset.colors.forEach((color,i)=>trainingState[PRINT_KEYS[i]]=color);}
+  }else state=applyReferenceColors(state);
+  save();updateControls();scheduleRender();
+});
 $('shortsPrintToggle').addEventListener('change',async event=>{
   const enabled=event.target.checked,request=++patternRequest;
   event.target.disabled=true;event.target.setAttribute('aria-busy','true');
@@ -304,7 +369,7 @@ $('surnameInput').addEventListener('input',event=>{state.surnameText=event.targe
 $('surnameColorButton').addEventListener('click',()=>select('surnameColor'));
 $('backLogoToggle').addEventListener('change',event=>{state.backLogoEnabled=event.target.checked;if(!state.backLogoEnabled&&selected==='backLogo')selected='backNumber';save();updateControls();scheduleRender();});
 $('backLogoColorButton').addEventListener('click',()=>select('backLogo'));
-$('reset').addEventListener('click',()=>{const outer=outerwear[product];if(outer)outer.state=outer.config.normalize(null);else if(product==='training')trainingState=normalizeTrainingState(null);else if(product==='suit')suitState=normalizeSuitState(null);else{patternRequest++;state=normalizeState(null);}save();updateControls();scheduleRender();toast('Исходный комплект восстановлен');});
+$('reset').addEventListener('click',()=>{const outer=outerwear[product];if(outer)outer.state=outer.config.normalize(null);else if(product==='training'){patternRequest++;trainingState=normalizeTrainingState(null);trainingGroup='top';trainingSelected='jacket';}else if(product==='suit')suitState=normalizeSuitState(null);else{patternRequest++;state=normalizeState(null);}save();updateControls();scheduleRender();toast('Исходный комплект восстановлен');});
 function pickPart(x,y){
   if(outerwear[product])return outerwear[product].preview.pick(x,y);
   if(product==='training')return trainingPreview.pick(x,y);

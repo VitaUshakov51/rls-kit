@@ -1,0 +1,119 @@
+{
+  "source": [
+    1086,
+    1448
+  ],
+  "preview": [
+    816,
+    1088
+  ],
+  "export": [
+    2160,
+    2880
+  ],
+  "defaults": {
+    "main": "#e33843",
+    "secondary": "#191d24",
+    "logo": "#ffffff"
+  },
+  "midtones": {
+    "main": 100.33333333333333,
+    "secondary": 39.333333333333336
+  },
+  "samples": {
+    "mainFront": [
+      240,
+      300
+    ],
+    "mainBack": [
+      810,
+      285
+    ],
+    "secondaryFront": [
+      245,
+      680
+    ],
+    "secondaryBack": [
+      810,
+      690
+    ],
+    "secondarySleeve": [
+      110,
+      440
+    ],
+    "logo": [
+      227,
+      234
+    ],
+    "pants": [
+      205,
+      1040
+    ],
+    "hardware": [
+      315,
+      300
+    ],
+    "hoodLining": [
+      310,
+      60
+    ],
+    "background": [
+      20,
+      400
+    ],
+    "shoe": [
+      169,
+      1340
+    ]
+  },
+  "samplePoints": {
+    "main": [
+      240,
+      300
+    ],
+    "secondary": [
+      245,
+      680
+    ],
+    "logo": [
+      211,
+      232
+    ],
+    "background": [
+      20,
+      400
+    ],
+    "hardware": [
+      315,
+      300
+    ],
+    "pants": [
+      205,
+      1040
+    ]
+  },
+  "logos": [
+    {
+      "name": "chest",
+      "repair": [
+        193,
+        222,
+        269,
+        251
+      ],
+      "print": [
+        199,
+        228,
+        262,
+        246
+      ],
+      "colorZone": "logo"
+    }
+  ],
+  "backdrop": "#ffffff",
+  "materialChannels": [
+    "main",
+    "secondary",
+    "logo"
+  ]
+}

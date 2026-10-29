@@ -17,11 +17,27 @@ export const PATTERNS = Object.freeze([
   {"id":"skyline","name":"Мегаполис","vector":true,"secondary":true,"tertiary":true,"colors":["#003399","#a0befa","#3a68c4","#000000","#ffffff"],"base":"#ffffff"},
   {"id":"red-lightning","name":"Красные молнии","vector":true,"secondary":true,"colors":["#e31e24","#ffffff"],"base":"#000000"},
   {"id":"teal-bars","name":"Бирюзовые штрихи","vector":true,"secondary":true,"tertiary":true,"colors":["#0f8185","#10595b","#ffffff"],"base":"#26a7ab"},
-  {"id":"brush-strokes","name":"Кистевые полосы","vector":true,"colors":["#00553e"],"base":"#ffffff"}
+  {"id":"brush-strokes","name":"Кистевые полосы","vector":true,"colors":["#00553e"],"base":"#ffffff"},
+  {"id":"paisley","name":"Пейсли","vector":true,"shirtOnly":true,"colors":["#14a0ff"],"base":"#000000"},
+  {"id":"bolt-burst","name":"Острые молнии","vector":true,"shirtOnly":true,"colors":["#000000"],"base":"#ffec00"},
+  {"id":"grunge-bands","name":"Гранж-полосы","vector":true,"shirtOnly":true,"colors":["#000000","#f4ca3a"],"base":"#ffec00","secondary":true},
+  {"id":"racing-lines","name":"Тонкие штрихи","vector":true,"shirtOnly":true,"colors":["#ffec00","#3a3a3a"],"base":"#000000","secondary":true},
+  {"id":"radial-burst","name":"Солнечный вихрь","vector":true,"shirtOnly":true,"colors":["#000000"],"base":"#ffffff"},
+  {"id":"stone-camo","name":"Осколочный камуфляж","vector":true,"shirtOnly":true,"colors":["#333333"],"base":"#000000"},
+  {"id":"tiger-stripes","name":"Тигровые полосы","vector":true,"shirtOnly":true,"colors":["#000000"],"base":"#ffffff"},
+  {"id":"halftone-wave","name":"Волна с точками","vector":true,"shirtOnly":true,"colors":["#000000"],"base":"#ffffff"},
+  {"id":"crystal","name":"Кристалл","vector":true,"shirtOnly":true,"colors":["#ffffff","#000000"],"base":"#3a099c","secondary":true},
+  {"id":"hex-gradient","name":"Градиентная мозаика","vector":true,"shirtOnly":true,"colors":["#ff6600","#ff9354"],"base":"#ffd3b8","secondary":true},
+  {"id":"zigzag","name":"Зигзаг","vector":true,"shirtOnly":true,"colors":["#ffffff","#86d1cc"],"base":"#62c9c5","secondary":true},
+  {"id":"torn-shapes","name":"Рваная геометрия","vector":true,"shirtOnly":true,"colors":["#030303","#666670","#999b9e"],"base":"#ffffff","secondary":true,"tertiary":true},
+  {"id":"city-bars","name":"Городской ритм","vector":true,"shirtOnly":true,"colors":["#017f96","#47aac9"],"base":"#63c5d5","secondary":true},
+  {"id":"ornament-stripes","name":"Орнаментальные полосы","vector":true,"shirtOnly":true,"colors":["#2c7a99"],"base":"#000000"},
+  {"id":"fracture-v","name":"Разлом","vector":true,"shirtOnly":true,"colors":["#333333"],"base":"#ffffff"},
+  {"id":"fade-lines","name":"Полосы с затуханием","vector":true,"shirtOnly":true,"colors":["#082c73"],"base":"#ffffff"}
 ]);
 const SHIRT_ONLY_PATTERNS=new Set(['dragon','lion','geometry','speed','barcode','gold-veins','diagonal-halftone','skyline']);
 export function canPrintShorts(id){
-  return id!=='none'&&PATTERNS.some(p=>p.id===id)&&!SHIRT_ONLY_PATTERNS.has(id);
+  return id!=='none'&&PATTERNS.some(p=>p.id===id)&&!SHIRT_ONLY_PATTERNS.has(id)&&!PATTERNS.find(p=>p.id===id)?.shirtOnly;
 }
 export function patternAsset(id,{preview=false,bitmap=false,extra=false}={}){
   // Preview bitmaps are rendered directly from the original curves at the

@@ -1,4 +1,4 @@
-import {renderPixels,normalizeState,patternAsset,shortsPatternAsset,PATTERNS,modelAsset} from './renderer.js?v=11';
+import {renderPixels,normalizeState,patternAsset,shortsPatternAsset,PATTERNS,modelAsset} from './renderer.js?v=23';
 import {drawSurname} from './surname.js?v=8';
 import {drawBoots,BOOT_PLACEMENTS} from './boots.js?v=8';
 async function image(url){

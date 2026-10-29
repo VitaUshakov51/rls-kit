@@ -1,4 +1,4 @@
-import {createRenderer} from './renderer.js?v=11';
+import {createRenderer} from './renderer.js?v=23';
 let renderer,pattern=null,patternId=null;
 globalThis.onmessage=event=>{
   const message=event.data;

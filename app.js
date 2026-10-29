@@ -1,4 +1,4 @@
-import {OUTLINE_KEYS, PATTERNS, PRINT_KEYS, normalizeState,restoreState,applyReferenceColors, renderPixels,createRenderer,createPicker,patternAsset,shortsPatternAsset,canPrintShorts,modelAsset} from './renderer.js?v=11';
+import {OUTLINE_KEYS, PATTERNS, PRINT_KEYS, normalizeState,restoreState,applyReferenceColors, renderPixels,createRenderer,createPicker,patternAsset,shortsPatternAsset,canPrintShorts,modelAsset} from './renderer.js?v=23';
 import {drawSurname} from './surname.js?v=8';
 import {createAssetCache} from './asset-cache.js?v=8';
 import {drawBoots,BOOT_PLACEMENTS} from './boots.js?v=8';
@@ -7,6 +7,7 @@ import {normalizeSuitState,suitAsset} from './suit-renderer.js?v=20';
 import {createSuitPreview} from './suit-preview.js?v=20';
 import {normalizeTrainingState,trainingAsset,renderTrainingPixels,trainingSelectionAt} from './training-renderer.js?v=20';
 import {OUTERWEAR,createOuterwearConfig} from './outerwear-renderer.js?v=20';
+import {recordMockupDownload} from './download-stats.js?v=22';
 const $ = id => document.getElementById(id);
 const STORAGE = 'rls-kit-builder-v1';
 const SUIT_STORAGE='rls-tracksuit-v1';
@@ -101,7 +102,7 @@ async function startWorker(){
   if(typeof Worker!=='function')return false;
   let worker;
   try{
-    worker=new Worker(new URL('./render-worker.js?v=11',import.meta.url),{type:'module'});
+    worker=new Worker(new URL('./render-worker.js?v=23',import.meta.url),{type:'module'});
     await new Promise((resolve,reject)=>{
       const timeout=setTimeout(()=>reject(new Error('Worker unavailable')),5000);
       worker.onerror=()=>{clearTimeout(timeout);reject(new Error('Worker unavailable'));};
@@ -358,7 +359,7 @@ $('download').addEventListener('click',async()=>{
     if(exportProduct==='suit')blob=await suitPreview.export(exportState);
     if(exportProduct==='kit'&&typeof Worker==='function'){
       let exporter;
-      try{exporter=new Worker(new URL('./export-worker.js?v=11',import.meta.url),{type:'module'});blob=await new Promise((resolve,reject)=>{const timeout=setTimeout(()=>reject(new Error('Export timeout')),20000);exporter.onmessage=event=>{clearTimeout(timeout);event.data.type==='complete'?resolve(event.data.blob):reject(new Error('Use compatible export'));};exporter.onerror=()=>{clearTimeout(timeout);reject(new Error('Use compatible export'));};exporter.postMessage({state:exportState});});}
+      try{exporter=new Worker(new URL('./export-worker.js?v=23',import.meta.url),{type:'module'});blob=await new Promise((resolve,reject)=>{const timeout=setTimeout(()=>reject(new Error('Export timeout')),20000);exporter.onmessage=event=>{clearTimeout(timeout);event.data.type==='complete'?resolve(event.data.blob):reject(new Error('Use compatible export'));};exporter.onerror=()=>{clearTimeout(timeout);reject(new Error('Use compatible export'));};exporter.postMessage({state:exportState});});}
       catch{}finally{exporter?.terminate();}
     }
     if(!blob&&exportProduct==='kit'){
@@ -370,8 +371,9 @@ $('download').addEventListener('click',async()=>{
     blob=await new Promise(resolve=>fullCanvas.toBlob(resolve,'image/png'));
     fullCanvas.width=fullCanvas.height=1;
     }
-    if(!blob)throw new Error('Export failed');
+    if(!blob||!blob.size)throw new Error('Export failed');
     exportFeedback.complete(blob);
+    recordMockupDownload(exportProduct);
   }catch{exportFeedback.fail();}
   finally{exporting=false;$('download').disabled=!activeReady();$('download').removeAttribute('aria-busy');$('downloadLabel').textContent='Скачать макет';}
 });

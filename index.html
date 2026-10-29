@@ -1,0 +1,132 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f5f6f8">
+  <meta name="description" content="Конструктор экипировки RLS: футбольная форма, костюмы, ветровки и зимние куртки в цветах вашей команды.">
+  <title>RLS — Конструктор экипировки</title>
+  <link rel="preload" href="assets/name-font.woff2?v=8" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="styles.css?v=21">
+</head>
+<body>
+  <header class="header">
+    <a class="brand" href="https://rls-team.ru/" aria-label="RLS — основной сайт"><img src="assets/rls.png" alt="RLS" width="203" height="63"><span class="brand-divider"></span><span>Конструктор экипировки</span></a>
+    <button class="button quiet" id="reset" type="button"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 10a8 8 0 1 1 2 8M4 4v6h6"/></svg>Сбросить</button>
+  </header>
+  <nav class="product-menu" aria-label="Тип комплекта">
+    <div class="product-switch" role="group" aria-label="Выберите комплект">
+      <button class="product-button active" data-product="kit" type="button" aria-pressed="true">Футбольная форма</button>
+      <button class="product-button" data-product="suit" type="button" aria-pressed="false">Парадный костюм</button>
+      <button class="product-button" data-product="training" type="button" aria-pressed="false">Тренировочный костюм</button>
+      <button class="product-button" data-product="windbreaker" type="button" aria-pressed="false">Ветровка</button>
+      <button class="product-button" data-product="winter" type="button" aria-pressed="false">Зимняя куртка</button>
+    </div>
+  </nav>
+  <main class="workspace">
+    <section class="preview" aria-label="Предпросмотр комплекта">
+      <div class="preview-heading"><div><p class="eyebrow">ВАШ КОМПЛЕКТ</p><h1 id="previewTitle">Форма в ваших цветах</h1></div><span class="live"><span></span>Предпросмотр</span></div>
+      <div class="stage" id="stage">
+        <div class="view-labels" aria-hidden="true"><span>Спереди</span><span>Сзади</span></div>
+        <div class="canvas-wrap" id="canvasWrap" tabindex="0" role="img" aria-label="Футболка, шорты и гетры спереди и сзади. Нажмите на деталь, чтобы выбрать ее цвет.">
+          <img class="base-preview" id="basePreview" src="assets/preview/kit.webp?v=8" alt="Комплект RLS: вид спереди и сзади" width="1080" height="1440" decoding="async">
+          <canvas id="kitCanvas" width="1080" height="1440" aria-hidden="true"></canvas>
+          <img id="suitBasePreview" class="suit-base-preview" alt="Парадный костюм RLS: вид спереди и сзади" width="816" height="1088" decoding="async" hidden>
+          <canvas id="suitCanvas" width="816" height="1088" aria-hidden="true" hidden></canvas>
+          <img id="trainingBasePreview" alt="Тренировочный костюм RLS: вид спереди и сзади" width="816" height="1088" decoding="async" hidden>
+          <canvas id="trainingCanvas" width="816" height="1088" aria-hidden="true" hidden></canvas>
+          <img id="windbreakerBasePreview" alt="Ветровка RLS: вид спереди и сзади" width="816" height="1088" decoding="async" hidden>
+          <canvas id="windbreakerCanvas" width="816" height="1088" aria-hidden="true" hidden></canvas>
+          <img id="winterBasePreview" alt="Зимняя куртка RLS: вид спереди и сзади" width="816" height="1088" decoding="async" hidden>
+          <canvas id="winterCanvas" width="816" height="1088" aria-hidden="true" hidden></canvas>
+          <div id="loading" class="loading"><span class="spinner"></span>Подготавливаем комплект</div>
+        </div>
+        <div class="stage-tip"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m7 3 11 9-6 1-3 6z"/></svg><span id="stageTip">Нажмите на деталь формы, чтобы изменить цвет</span></div>
+      </div>
+    </section>
+    <aside class="controls" aria-label="Настройка комплекта">
+      <div class="controls-heading"><h2>Настройте комплект</h2><p id="controlsHint">Выберите деталь, затем цвет.</p></div>
+      <div class="tabs" id="kitTabs" role="tablist" aria-label="Часть комплекта">
+        <button id="tab-shirt" class="tab active" role="tab" aria-selected="true" aria-controls="parts" data-group="shirt" type="button">Футболка</button>
+        <button id="tab-shorts" class="tab" role="tab" aria-selected="false" aria-controls="parts" data-group="shorts" type="button" tabindex="-1">Шорты</button>
+        <button id="tab-socks" class="tab" role="tab" aria-selected="false" aria-controls="parts" data-group="socks" type="button" tabindex="-1">Гетры</button>
+      </div>
+      <div class="parts" id="parts" role="tabpanel" aria-labelledby="tab-shirt"></div>
+      <section class="color-section" aria-labelledby="selectedName">
+        <div class="section-title"><h3 id="selectedName">Цвет футболки</h3><span class="color-value" id="colorValue">#FFFFFF</span></div>
+        <div class="swatches" id="swatches" role="group" aria-label="Палитра цветов"></div>
+        <div class="custom-color"><label class="custom-picker" for="colorPicker"><input id="colorPicker" type="color" value="#ffffff" aria-label="Выбрать произвольный цвет"><span>Свой цвет</span></label><input id="hexInput" class="hex-input" type="text" value="#FFFFFF" maxlength="7" pattern="#[0-9a-fA-F]{6}" aria-label="Код цвета HEX" spellcheck="false" autocomplete="off"></div>
+        <p class="input-error" id="colorError" role="status"></p>
+      </section>
+      <section class="outline-section" id="outlineSection" hidden>
+        <label class="toggle-row" for="outlineToggle"><span>Обводка этой детали</span><input class="switch" type="checkbox" id="outlineToggle"></label>
+        <label class="outline-color" id="outlineColorRow" for="outlineColor" hidden><span>Цвет обводки</span><input type="color" id="outlineColor" value="#ffffff"></label>
+      </section>
+      <section class="name-section" id="backLogoSection">
+        <label class="toggle-row" for="backLogoToggle"><span>Логотип на спине</span><input class="switch" type="checkbox" id="backLogoToggle"></label>
+        <button class="surname-color-button" id="backLogoColorButton" type="button" hidden><span class="part-dot" id="backLogoDot"></span><span>Цвет и обводка логотипа</span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 5 7 7-7 7"/></svg></button>
+      </section>
+      <section class="pattern-section" id="patternSection" aria-labelledby="patternTitle">
+        <div class="section-title"><h3 id="patternTitle">Вариант принта</h3></div>
+        <div class="pattern-options" id="patternOptions" role="group" aria-label="Вариант принта">
+          <button class="pattern-card active" data-pattern="original" type="button" aria-pressed="true"><span class="pattern-thumb fragments"></span><span>Текущий</span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12 4 4L19 6"/></svg></button>
+          <button class="pattern-card" data-pattern="none" type="button" aria-pressed="false"><span class="pattern-thumb plain"></span><span>Без принта</span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12 4 4L19 6"/></svg></button>
+        </div>
+        <button id="referenceColors" class="reference-colors" type="button" hidden>Цвета комплекта как на макете</button>
+      </section>
+      <section class="name-section" id="shortsPrintSection" hidden>
+        <label class="toggle-row" for="shortsPrintToggle"><span>Принт с футболки на шортах</span><input class="switch" type="checkbox" id="shortsPrintToggle" aria-describedby="shortsPrintHint"></label>
+        <p class="name-hint" id="shortsPrintHint">Принт и его цвета берутся с футболки.</p>
+      </section>
+      <section class="name-section" id="nameSection">
+        <label class="toggle-row" for="surnameToggle"><span>Фамилия на спине</span><input class="switch" type="checkbox" id="surnameToggle"></label>
+        <div id="surnameFields" hidden>
+          <label class="field-label" for="surnameInput">Фамилия</label>
+          <input id="surnameInput" class="surname-input" type="text" maxlength="24" placeholder="Введите фамилию" autocomplete="off" spellcheck="false">
+          <button class="surname-color-button" id="surnameColorButton" type="button"><span class="part-dot" id="surnameDot"></span><span>Цвет и обводка фамилии</span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 5 7 7-7 7"/></svg></button>
+          <p class="name-hint">Над номером, как на макете.</p>
+        </div>
+      </section>
+      <div class="controls-footer">
+        <button class="button primary" id="download" type="button" disabled><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12m-5-5 5 5 5-5M5 17v4h14v-4"/></svg><span id="downloadLabel">Скачать макет</span></button>
+        <p>Изменения сразу видны спереди и сзади</p>
+        <section class="manager-contact" aria-labelledby="contactTitle">
+          <h3 id="contactTitle">Узнать стоимость комплекта</h3>
+          <p class="manager-contact-copy">Скачайте макет и отправьте его менеджеру:</p>
+          <div class="social-links" role="group" aria-label="Связаться с менеджером">
+            <a class="social-button social-button--telegram" href="https://t.me/office_manager_rls" target="_blank" rel="noopener noreferrer" aria-label="Написать менеджеру в Telegram (новая вкладка)"><img src="assets/social/telegram.svg" width="24" height="24" alt="" aria-hidden="true"><span>Telegram</span></a>
+            <a class="social-button social-button--max" href="https://max.ru/u/f9LHodD0cOLgikdzHwyS03aW6ya_WibrXnfdpELv21M9zB6Hi4WqgoEM9DY" target="_blank" rel="noopener noreferrer" aria-label="Написать менеджеру в MAX (новая вкладка)"><img src="assets/social/max.svg" width="24" height="24" alt="" aria-hidden="true"><span>MAX</span></a>
+            <a class="social-button social-button--vk" href="https://vk.me/rls_football" target="_blank" rel="noopener noreferrer" aria-label="Написать менеджеру во ВКонтакте (новая вкладка)"><img src="assets/social/vk.svg" width="24" height="24" alt="" aria-hidden="true"><span>ВКонтакте</span></a>
+          </div>
+        </section>
+      </div>
+    </aside>
+  </main>
+  <dialog id="exportDialog" class="export-dialog" aria-labelledby="exportTitle" aria-describedby="exportMessage" data-state="busy">
+    <div class="export-indicator" aria-hidden="true">
+      <span class="spinner export-spinner"></span>
+      <svg class="export-check" viewBox="0 0 24 24"><path d="m5 12 4 4L19 6"/></svg>
+      <svg class="export-error" viewBox="0 0 24 24"><path d="M12 7v6m0 4h.01"/><circle cx="12" cy="12" r="9"/></svg>
+    </div>
+    <div role="status" aria-live="polite" aria-atomic="true">
+      <h2 id="exportTitle" data-export-title>Готовим макет</h2>
+      <p id="exportMessage" data-export-message>Пожалуйста, дождитесь подготовки. PNG скачается автоматически.</p>
+    </div>
+    <div class="export-actions">
+      <a class="button primary" data-export-save download="RLS-komplekt.png" hidden>Скачать PNG</a>
+      <section class="manager-contact export-contact" aria-labelledby="exportContactTitle">
+        <h3 id="exportContactTitle">Отправьте макет менеджеру</h3>
+        <p class="manager-contact-copy">Прикрепите скачанный PNG в сообщении — рассчитаем стоимость вашего комплекта.</p>
+        <div class="social-links" role="group" aria-label="Отправить макет менеджеру для расчёта стоимости">
+          <a class="social-button social-button--telegram" href="https://t.me/office_manager_rls" target="_blank" rel="noopener noreferrer" aria-label="Отправить макет менеджеру в Telegram (новая вкладка)"><img src="assets/social/telegram.svg" width="24" height="24" alt="" aria-hidden="true"><span>Telegram</span></a>
+          <a class="social-button social-button--max" href="https://max.ru/u/f9LHodD0cOLgikdzHwyS03aW6ya_WibrXnfdpELv21M9zB6Hi4WqgoEM9DY" target="_blank" rel="noopener noreferrer" aria-label="Отправить макет менеджеру в MAX (новая вкладка)"><img src="assets/social/max.svg" width="24" height="24" alt="" aria-hidden="true"><span>MAX</span></a>
+          <a class="social-button social-button--vk" href="https://vk.me/rls_football" target="_blank" rel="noopener noreferrer" aria-label="Отправить макет менеджеру во ВКонтакте (новая вкладка)"><img src="assets/social/vk.svg" width="24" height="24" alt="" aria-hidden="true"><span>ВКонтакте</span></a>
+        </div>
+      </section>
+      <button class="button quiet" data-export-close type="button" hidden>Вернуться к конструктору</button>
+    </div>
+  </dialog>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  <script type="module" src="app.js?v=22p1"></script>
+</body>
+</html>

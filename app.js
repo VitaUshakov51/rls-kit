@@ -5,8 +5,8 @@ import {drawBoots,BOOT_PLACEMENTS} from './boots.js?v=8';
 import {createExportFeedback,waitForExportPaint} from './export-feedback.js?v=12';
 import {normalizeSuitState,suitAsset} from './suit-renderer.js?v=20';
 import {createSuitPreview} from './suit-preview.js?v=20';
-import {normalizeTrainingState,trainingAsset} from './training-renderer.js?v=22t1';
-import {createTrainingPreview} from './training-preview.js?v=22t1';
+import {normalizeTrainingState,applyTrainingReferenceColors,trainingAsset} from './training-renderer.js?v=22t2';
+import {createTrainingPreview} from './training-preview.js?v=22t2';
 import {OUTERWEAR,createOuterwearConfig} from './outerwear-renderer.js?v=20';
 import {recordMockupDownload} from './download-stats.js?v=22';
 const $ = id => document.getElementById(id);
@@ -214,8 +214,8 @@ function updateControls() {
   $('backLogoColorButton').hidden=!state.backLogoEnabled;
   $('backLogoDot').style.backgroundColor=state.backLogo;
   const activePattern=isTraining?trainingState.pattern:state.pattern;
-  $('referenceColors').hidden=!PATTERNS.find(p=>p.id===activePattern)?.colors;
-  $('referenceColors').textContent=isTraining?'Цвета кофты как на макете':'Цвета комплекта как на макете';
+  $('referenceColors').hidden=!isTraining&&!PATTERNS.find(p=>p.id===activePattern)?.colors;
+  $('referenceColors').textContent=isTraining?'Цвета как на макете':'Цвета комплекта как на макете';
   $('surnameToggle').checked=state.surnameEnabled;
   $('surnameFields').hidden=!state.surnameEnabled;
   $('surnameInput').value=state.surnameText;
@@ -351,7 +351,7 @@ for(const button of document.querySelectorAll('.pattern-card')) button.addEventL
 });
 $('referenceColors').addEventListener('click',()=>{
   if(product==='training'){
-    const preset=PATTERNS.find(p=>p.id===trainingState.pattern);if(preset?.colors){trainingState.jacket=preset.base;preset.colors.forEach((color,i)=>trainingState[PRINT_KEYS[i]]=color);}
+    trainingState=applyTrainingReferenceColors(trainingState);
   }else state=applyReferenceColors(state);
   save();updateControls();scheduleRender();
 });

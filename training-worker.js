@@ -1,4 +1,4 @@
-import {renderTrainingPixels,trainingAsset,trainingPatternAsset} from './training-renderer.js?v=22t1';
+import {renderTrainingPixels,trainingAsset,trainingPatternAsset} from './training-renderer.js?v=22t2';
 import {PATTERNS} from './renderer.js?v=22p2';
 let model,frame,pattern=null;
 async function decode(url){

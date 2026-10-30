@@ -6,10 +6,18 @@ export function normalizeTrainingState(value){
   for(const key of TRAINING_COLOR_KEYS)if(/^#[0-9a-f]{6}$/i.test(value?.[key]||''))result[key]=value[key].toLowerCase();
   if(!/^#[0-9a-f]{6}$/i.test(value?.pantsInserts||''))result.pantsInserts=result.jacket;
   for(const key of ['jacket','inserts','pants','pantsInserts'])if(result[key]==='#191919')result[key]='#191d24';
-  if(['inserts','print','plain'].includes(value?.topMode))result.topMode=value.topMode;
+  if(['inserts','print'].includes(value?.topMode))result.topMode=value.topMode;
   if(['inserts','plain'].includes(value?.pantsMode))result.pantsMode=value.pantsMode;
   if(PATTERNS.some(p=>p.id===value?.pattern&&p.id!=='none'))result.pattern=value.pattern;
   return result;
+}
+export function applyTrainingReferenceColors(value){
+  const state=normalizeTrainingState(value),preset=state.pattern==='original'?{base:'#ffffff',colors:['#c2c2c2']}:PATTERNS.find(p=>p.id===state.pattern);
+  if(preset?.colors){
+    state.jacket=preset.base;state.pantsInserts=preset.base;state.pantsMode='inserts';
+    preset.colors.forEach((color,i)=>state[PRINT_KEYS[i]]=color);
+  }
+  return state;
 }
 export function trainingAsset(name,{preview=false}={}){
   const file=name==='model'?(preview?'preview.webp':'model.webp'):(preview?'preview-':'')+name+(name==='poster'||preview?'.webp':'.png');
@@ -17,7 +25,7 @@ export function trainingAsset(name,{preview=false}={}){
 }
 export function trainingPatternAsset(id,{preview=false,extra=false}={}){
   if(!PATTERNS.some(p=>p.id===id&&id!=='none'))throw new Error('Unknown training pattern');
-  return 'assets/training/'+(preview?'preview/':'')+'patterns/'+id+(extra?'-extra':'')+'.png?v=22t1';
+  return 'assets/training/'+(preview?'preview/':'')+'patterns/'+id+(extra?'-extra':'')+'.png?v=22t2';
 }
 const rgb=hex=>[1,3,5].map(i=>parseInt(hex.slice(i,i+2),16));
 const byte=value=>Math.max(0,Math.min(255,Math.round(value)));

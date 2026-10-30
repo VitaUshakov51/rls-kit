@@ -1,4 +1,4 @@
-import {normalizeTrainingState,renderTrainingPixels,trainingSelectionAt,trainingAsset,trainingPatternAsset} from './training-renderer.js?v=22t1';
+import {normalizeTrainingState,renderTrainingPixels,trainingSelectionAt,trainingAsset,trainingPatternAsset} from './training-renderer.js?v=22t2';
 import {PATTERNS} from './renderer.js?v=22p2';
 import {createAssetCache} from './asset-cache.js?v=8';
 function loadImage(url){return new Promise((resolve,reject)=>{const image=new Image();image.decoding='async';image.onload=()=>resolve(image);image.onerror=()=>reject(new Error('Training image unavailable'));image.src=url;});}
@@ -41,7 +41,7 @@ export function createTrainingPreview(canvas,onPaint,onError){
         model=await loadModel(true);canvas.width=model.width;canvas.height=model.height;output=new Uint8ClampedArray(model.source.length);
         if(typeof Worker==='function'){
           try{
-            worker=new Worker(new URL('./training-worker.js?v=22t1',import.meta.url),{type:'module'});
+            worker=new Worker(new URL('./training-worker.js?v=22t2',import.meta.url),{type:'module'});
             await new Promise((resolve,reject)=>{
               const timeout=setTimeout(()=>reject(new Error('Use compatible preview')),4000);
               worker.onerror=()=>{clearTimeout(timeout);reject(new Error('Use compatible preview'));};
@@ -71,7 +71,7 @@ export function createTrainingPreview(canvas,onPaint,onError){
       if(typeof Worker==='function'){
         let exporter;
         try{
-          exporter=new Worker(new URL('./training-worker.js?v=22t1',import.meta.url),{type:'module'});
+          exporter=new Worker(new URL('./training-worker.js?v=22t2',import.meta.url),{type:'module'});
           return await new Promise((resolve,reject)=>{
             const timeout=setTimeout(()=>reject(new Error('Use compatible export')),20000);
             exporter.onmessage=({data})=>{clearTimeout(timeout);data.type==='complete'?resolve(data.blob):reject(new Error('Use compatible export'));};
